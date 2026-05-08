@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HP's Audiobook Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f2e8d9;
+    --surface: #ede0cc;
+    --card: #e8d8c0;
+    --border: #c8b89a;
+    --accent: #6b3f1a;
+    --accent-dim: #8b5a2b;
+    --text: #2c1a0e;
+    --text-muted: #6b4f35;
+    --text-dim: #9b7a5a;
+    --tag-bg: #d9c8aa;
+    --tag-text: #5a3010;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', Georgia, serif;
+    font-weight: 400;
+    min-height: 100vh;
+  }
+
+  /* Subtle grain texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 56px 48px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .header-title h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .header-title h1 em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .header-title p {
+    margin-top: 8px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 32px;
+    padding-bottom: 4px;
+  }
+
+  .stat {
+    text-align: right;
+  }
+
+  .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  .controls {
+    position: relative;
+    z-index: 1;
+    padding: 24px 48px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: rgba(242,232,217,0.85);
+    position: sticky;
+    top: 0;
+    backdrop-filter: blur(12px);
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 420px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px 10px 38px;
+    color: var(--text);
+    font-family: 'Lora', Georgia, serif;
+    font-size: 0.9rem;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--accent-dim);
+  }
+
+  input[type="text"]::placeholder {
+    color: var(--text-dim);
+  }
+
+  select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 36px 10px 14px;
+    color: var(--text);
+    font-family: 'Lora', Georgia, serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8070' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: border-color 0.2s;
+    min-width: 160px;
+  }
+
+  select:focus { border-color: var(--accent-dim); }
+
+  .view-toggle {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .view-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.85rem;
+  }
+
+  .view-btn.active, .view-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+  }
+
+  .result-count {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  /* Main content */
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 32px 48px 64px;
+  }
+
+  /* Author group */
+  .author-group {
+    margin-bottom: 48px;
+  }
+
+  .author-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .author-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--text);
+  }
+
+  .author-count {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Grid view */
+  .books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+
+  .book-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    transition: border-color 0.2s, transform 0.15s;
+    cursor: default;
+  }
+
+  .book-card:hover {
+    border-color: var(--accent-dim);
+    transform: translateY(-1px);
+  }
+
+  .book-title {
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .book-series-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    color: var(--tag-text);
+    background: var(--tag-bg);
+    border-radius: 4px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* List view */
+  .books-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .book-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+
+  .book-row:hover {
+    background: var(--card);
+  }
+
+  .book-row .book-title {
+    flex: 1;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .book-row .book-series-tag {
+    flex-shrink: 0;
+  }
+
+  /* No results */
+  .no-results {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--text-muted);
+  }
+
+  .no-results p:first-child {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  /* Add book panel */
+  .add-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 48px;
+    z-index: 10;
+    background: var(--accent);
+    color: #f2e8d9;
+    padding: 14px 24px;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 24px rgba(107,63,26,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 32px rgba(107,63,26,0.3);
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 20;
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px;
+    width: 100%;
+    max-width: 480px;
+    margin: 24px;
+  }
+
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding-left: 14px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn-primary {
+    flex: 1;
+    background: var(--accent);
+    color: #f2e8d9;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 20px;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .btn-secondary:hover { border-color: var(--text-muted); }
+
+  .highlight {
+    background: rgba(107,63,26,0.18);
+    border-radius: 2px;
+    color: var(--accent);
+  }
+
+  /* Synopsis */
+  .synopsis {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .synopsis-btn {
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    display: block;
+  }
+
+  .synopsis-btn:hover {
+    border-color: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .synopsis-btn.loading {
+    color: var(--text-dim);
+    cursor: default;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Fetch all banner */
+  .fetch-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .fetch-banner p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .fetch-banner p span {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .fetch-all-btn {
+    background: var(--accent);
+    color: #f2e8d9;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+
+  .fetch-all-btn:hover { opacity: 0.85; }
+  .fetch-all-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .stop-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .stop-btn:hover { border-color: var(--text-muted); }
+
+  @media (max-width: 640px) {
+    header, .controls, main { padding-left: 20px; padding-right: 20px; }
+    header { padding-top: 32px; }
+    .add-btn { right: 20px; bottom: 20px; }
+    .header-stats { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">
+    <h1>HP's Audiobook Library</h1>
+    <p>Personal collection</p>
+  </div>
+  <div class="header-stats">
+    <div class="stat">
+      <div class="stat-number" id="stat-books">0</div>
+      <div class="stat-label">Books</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number" id="stat-authors">0</div>
+      <div class="stat-label">Authors</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number" id="stat-series">0</div>
+      <div class="stat-label">Series</div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search" placeholder="Search titles, authors, series…">
+  </div>
+  <select id="filter-author">
+    <option value="">All Authors</option>
+  </select>
+  <select id="filter-series">
+    <option value="">All Series</option>
+  </select>
+  <select id="sort-by">
+    <option value="author">Sort: Author</option>
+    <option value="title">Sort: Title</option>
+    <option value="series">Sort: Series</option>
+  </select>
+  <span class="result-count" id="result-count"></span>
+  <div class="view-toggle">
+    <button class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Grid">▦</button>
+    <button class="view-btn" id="btn-list" onclick="setView('list')" title="List">☰</button>
+  </div>
+</div>
+
+<main id="main-content">
+  <div id="fetch-banner-wrap"></div>
+  <div id="book-content"></div>
+</main>
+
+<button class="add-btn" onclick="openModal()">＋ Add Book</button>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>Add a Book</h2>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="new-title" placeholder="Book title">
+    </div>
+    <div class="form-group">
+      <label>Author</label>
+      <input type="text" id="new-author" placeholder="Author name">
+    </div>
+    <div class="form-group">
+      <label>Series (optional)</label>
+      <input type="text" id="new-series" placeholder="Series name">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="addBook()">Add to Library</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'audiobook_library_v1';
+
+const DEFAULT_BOOKS = [
+  {"author": "A M King", "title": "Witch Happens - Summer Sisters 1", "series": "Summer Sisters"},
+  {"author": "A.K. Rose", "title": "Mine", "series": ""},
+  {"author": "Aiden Phoenix", "title": "Hedge Mage", "series": ""},
+  {"author": "Aimee Easterling", "title": "Matebranded", "series": "Rune Wolf"},
+  {"author": "Aimee Easterling", "title": "Huntress Born", "series": "Wolf Legacy"},
+  {"author": "Alexandria Bellefleur", "title": "Written in the Stars", "series": ""},
+  {"author": "Alicia Rades", "title": "Fire in Frost Book 1", "series": "Crystal Frost Series"},
+  {"author": "Amelia Shaw", "title": "Taken by the Dragon King", "series": ""},
+  {"author": "Amelia Shaw", "title": "The Pack's Mate", "series": ""},
+  {"author": "Amelia Shaw & Tamsin Baker", "title": "Prowling their Mate", "series": ""},
+  {"author": "Andrew Rowe", "title": "Sufficiently Advanced Magic", "series": "Arcane Ascension"},
+  {"author": "Anna Sewell", "title": "Black Beauty", "series": ""},
+  {"author": "Anne McCaffrey", "title": "Nimisha's Ship", "series": ""},
+  {"author": "Anne McCaffrey", "title": "Freedom's Landing Book 1", "series": "Catteni Series"},
+  {"author": "Anne McCaffrey", "title": "Freedom's Ransom Book 4", "series": "Freedom Series"},
+  {"author": "Anne McCaffrey", "title": "Pegasus in Space", "series": "Pegasus Series"},
+  {"author": "Anne McCaffrey", "title": "All the Weyrs of Pern - Dragonriders of Pern, Book 11", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Beyond Between", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragon Harper", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragon's Blood", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragon's Fire", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragon's Kin", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragon's Time", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragondrums", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragonflight - Dragonriders of Pern, Book 1", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragongirl", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragonheart", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragonquest - Dragonriders of Pern, Book 2", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragonseye", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragonsinger", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Dragonsong", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Ever The Twain", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Moreta - Dragonlady of Pern", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Nerika's Story", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Runner Of Pern", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Sky Dragons", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "The Chronicles of Pern", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "The Dolphins of Pern", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "The Master Harper of Pern", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "The Renegades of Pern", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "The Skies of Pern", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "The Smallest Dragon Boy", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "The White Dragon - Dragonriders of Pern, Book 3", "series": "Pern Series"},
+  {"author": "Anne McCaffrey", "title": "Catalyst A Tale of the Barque Cats", "series": "Tales of the Barque Cats"},
+  {"author": "Anne McCaffrey", "title": "Damia Book 2", "series": "Tower and Hive Series"},
+  {"author": "Anne McCaffrey", "title": "The Rowan Book 1", "series": "Tower and Hive Series"},
+  {"author": "Anne McCaffrey & Elizabeth Ann Scarborough", "title": "Changelings", "series": "Petaybee"},
+  {"author": "Anne McCaffrey & Elizabeth Ann Scarborough", "title": "Deluge Book 3", "series": "The Twins of Petaybee Trilogy"},
+  {"author": "Anne McCaffrey & Elizabeth Ann Scarborough", "title": "Maelstrom Book 2", "series": "The Twins of Petaybee Trilogy"},
+  {"author": "Anya J. Cosgrove", "title": "A Deal with the Shadow King", "series": "Curse of the Fae"},
+  {"author": "April L. Moon", "title": "Fated to the Wolf Prince", "series": "The Hunted Omegas"},
+  {"author": "Ashley McLeo", "title": "A Legacy Witch", "series": "Spellcasters Spy Academy"},
+  {"author": "Ava Strong", "title": "Without Mercy", "series": "Dakota Steele FBI Thriller"},
+  {"author": "Blake Pierce", "title": "All Mine", "series": "Nicky Lyons FBI Thriller"},
+  {"author": "Blake Pierce", "title": "Face of Death", "series": "Zoe Prime Mystery"},
+  {"author": "Blake R. Wolfe", "title": "Undertow", "series": ""},
+  {"author": "Bram Stoker", "title": "Dracula", "series": ""},
+  {"author": "Bruno Miller", "title": "The Dark Road Series Collection", "series": "Dark Road Series"},
+  {"author": "Carol Beth Anderson", "title": "Straw into Gold", "series": ""},
+  {"author": "Carrie Vaughn", "title": "Kitty and the Dead Man's Hand Book 5", "series": "Kitty Norville Series"},
+  {"author": "Carrie Vaughn", "title": "Kitty and The Midnight Hour Book 1", "series": "Kitty Norville Series"},
+  {"author": "Carrie Vaughn", "title": "Kitty and the Silver Bullet Book 4", "series": "Kitty Norville Series"},
+  {"author": "Carrie Vaughn", "title": "Kitty Goes to Washington Book 2", "series": "Kitty Norville Series"},
+  {"author": "Carrie Vaughn", "title": "Kitty Takes a Holiday Book 3", "series": "Kitty Norville Series"},
+  {"author": "Cassandra Clare", "title": "Clockwork Angel - The Infernal Devices, Book 1", "series": "The Infernal Devices"},
+  {"author": "Cassie Alexander", "title": "The Tiger and the Swan", "series": ""},
+  {"author": "Cassie Alexander & Kara Lockharte", "title": "Dragon's Don't Date", "series": ""},
+  {"author": "CD Gorri", "title": "His Wild Obsession", "series": ""},
+  {"author": "Charlaine Harris", "title": "A Longer Fall Book 2", "series": "Gunnie Rose Series"},
+  {"author": "Charlaine Harris", "title": "All the Dead Shall Weep Book 5", "series": "Gunnie Rose Series"},
+  {"author": "Charlaine Harris", "title": "An Easy Death Book 1", "series": "Gunnie Rose Series"},
+  {"author": "Charlaine Harris", "title": "The Russian Cage Book 3", "series": "Gunnie Rose Series"},
+  {"author": "Charlaine Harris", "title": "The Serpent in Heaven Book 4", "series": "Gunnie Rose Series"},
+  {"author": "D.B. West & Lane Hart", "title": "Roman", "series": ""},
+  {"author": "Danielle L. Jensen", "title": "The Bridge Kingdom", "series": "Bridge Kingdom"},
+  {"author": "Danielle L. Jensen", "title": "The Endless War", "series": "Bridge Kingdom"},
+  {"author": "Danielle L. Jensen", "title": "The Inadequate Heir", "series": "Bridge Kingdom"},
+  {"author": "Danielle L. Jensen", "title": "The Tempest Blade", "series": "Bridge Kingdom"},
+  {"author": "Danielle L. Jensen", "title": "The Traitor Queen", "series": "Bridge Kingdom"},
+  {"author": "Danielle L. Jensen", "title": "The Twisted Throne", "series": "Bridge Kingdom"},
+  {"author": "Deanna Chase", "title": "The Vampire's Last Dance", "series": ""},
+  {"author": "EG Foley", "title": "The Lost Heir - Gryphon Chronicles 1", "series": "Gryphon Chronicles"},
+  {"author": "Ella Tucker", "title": "Bear Enemy's Fated Mate", "series": ""},
+  {"author": "Ella Tucker", "title": "Wild Heart - A Smoky Mountains Bear Shifter Romance", "series": ""},
+  {"author": "Elva Birch-Zoe Chant", "title": "Her Hellhound Bodyguard", "series": ""},
+  {"author": "Emma Glass", "title": "The Witch Between Worlds - 10 Book Epic Fantasy Box Set", "series": ""},
+  {"author": "Esther Perel", "title": "Mating in Captivity (Episodes)", "series": "Where Should We Begin"},
+  {"author": "Fiona Grace", "title": "Herbal Homicide", "series": "Penny Hawthorne Cozy Mystery"},
+  {"author": "George Orwell", "title": "1984", "series": ""},
+  {"author": "H.G. Wells", "title": "H.G. Wells: The Science Fiction Collection", "series": ""},
+  {"author": "J.R. Ward", "title": "A Bloom in Winter Book 22.5", "series": "Black Dagger Brotherhood"},
+  {"author": "J.R. Ward", "title": "Dark Lover - The Black Dagger Brotherhood, Book 1", "series": "Black Dagger Brotherhood"},
+  {"author": "J.R. Ward", "title": "Blood Kiss Book 1", "series": "Black Dagger Legacy"},
+  {"author": "J.R. Ward", "title": "The Jackal Book 1", "series": "The Black Dagger Brotherhood Prison Camp"},
+  {"author": "James Mallory & Mercedes Lackey", "title": "The Outstretched Shadow Book 1", "series": "Obsidian Mountain Trilogy"},
+  {"author": "James Mallory & Mercedes Lackey", "title": "To Light a Candle Book 2", "series": "Obsidian Mountain Trilogy"},
+  {"author": "James Mallory & Mercedes Lackey", "title": "When Darkness Falls Book 3", "series": "Obsidian Mountain Trilogy"},
+  {"author": "Jasper Fforde", "title": "The Eyre Affair - A Thursday Next Novel", "series": "Thursday Next"},
+  {"author": "Jaysea Lynn", "title": "For Whom the Belle Tolls", "series": ""},
+  {"author": "Jennifer L Hart", "title": "Witch Way After Forty", "series": ""},
+  {"author": "Juliana Haygert", "title": "The Demon Kiss", "series": ""},
+  {"author": "Juliana Haygert", "title": "The Midnight Test", "series": ""},
+  {"author": "Juliana Haygert", "title": "The Night Calling", "series": ""},
+  {"author": "Kate Bold", "title": "The Killing Game", "series": "Alexa Chase Suspense Thriller"},
+  {"author": "Kate Moseman", "title": "Silver Spells", "series": ""},
+  {"author": "Kestra Pingree", "title": "Nightshade Academy Episode 1", "series": "Nightshade Academy"},
+  {"author": "Kym Grosso", "title": "Kade's Dark Embrace", "series": ""},
+  {"author": "Lara K. Thorne", "title": "The Ember Oath", "series": ""},
+  {"author": "Laramie Briscoe", "title": "Renegade", "series": ""},
+  {"author": "Larry Dixon & Mercedes Lackey", "title": "The Black Gryphon Book 1", "series": "Mage Wars"},
+  {"author": "Larry Dixon & Mercedes Lackey", "title": "The Silver Gryphon Book 3", "series": "Mage Wars"},
+  {"author": "Larry Dixon & Mercedes Lackey", "title": "The White Gryphon Book 2", "series": "Mage Wars"},
+  {"author": "Larry Dixon & Mercedes Lackey", "title": "Owlsight - Owl Mage Trilogy, Book 2", "series": "Owl Mage Trilogy"},
+  {"author": "Lisa Becker", "title": "Starfish Book 1", "series": ""},
+  {"author": "Lucia Ashta", "title": "Perfect Pending", "series": ""},
+  {"author": "M. Lynn", "title": "Dragon Rising", "series": ""},
+  {"author": "Maddox Grey", "title": "A Shift in Shadows", "series": "Lost Legacies"},
+  {"author": "Mandy M. Roth", "title": "Act of Mercy", "series": "Immortal Ops"},
+  {"author": "Mary Shelley", "title": "Frankenstein", "series": ""},
+  {"author": "Megan Linski", "title": "Hidden Legends Starter Collection", "series": ""},
+  {"author": "Megan Linski", "title": "The Fire Prophecy", "series": "Academy of Magical Creatures"},
+  {"author": "Megan Linski", "title": "Torrent", "series": "Angels and Demons"},
+  {"author": "Megan Linski", "title": "University of Sorcery, Books 1-3", "series": "Hidden Legends"},
+  {"author": "Megan Linski", "title": "The Wolven Mark", "series": "University of Sorcery"},
+  {"author": "Megan Linski & Alicia Rades", "title": "Academy of Magical Creatures: Books 1-3", "series": "Hidden Legends"},
+  {"author": "Melissa Wright", "title": "Between Ink and Shadows", "series": "Between Ink and Shadows"},
+  {"author": "Mercedes Lackey", "title": "Fortune's Fool - Tales of the Five Hundred Kingdoms, Book 3", "series": "500 Kingdoms"},
+  {"author": "Mercedes Lackey", "title": "One Good Knight - Tales of the Five Hundred Kingdoms, Book 2", "series": "500 Kingdoms"},
+  {"author": "Mercedes Lackey", "title": "The Fairy Godmother - Tales of the Five Hundred Kingdoms, Book 1", "series": "500 Kingdoms"},
+  {"author": "Mercedes Lackey", "title": "The Snow Queen", "series": "500 Kingdoms"},
+  {"author": "Mercedes Lackey", "title": "Arrow's Fall - Book 3", "series": "Arrows of the Queen"},
+  {"author": "Mercedes Lackey", "title": "Arrow's Flight - Book 2", "series": "Arrows of the Queen"},
+  {"author": "Mercedes Lackey", "title": "Arrows of the Queen - Heralds of Valdemar, Book 1", "series": "Arrows of the Queen"},
+  {"author": "Mercedes Lackey", "title": "Four and Twenty Blackbirds Book 4", "series": "Bardic Voices"},
+  {"author": "Mercedes Lackey", "title": "The Eagle & the Nightingales Book 3", "series": "Bardic Voices"},
+  {"author": "Mercedes Lackey", "title": "The Lark and the Wren Book 1", "series": "Bardic Voices"},
+  {"author": "Mercedes Lackey", "title": "The Robin and the Kestrel Book 2", "series": "Bardic Voices"},
+  {"author": "Mercedes Lackey", "title": "Bedlam Boyz - Bedlam's Bard, Book 3", "series": "Bedlam's Bard"},
+  {"author": "Mercedes Lackey", "title": "Bedlam's Bard - Knights of Ghosts and Shadows", "series": "Bedlam's Bard"},
+  {"author": "Mercedes Lackey", "title": "Beyond World's End - Bedlam's Bard, Book 4", "series": "Bedlam's Bard"},
+  {"author": "Mercedes Lackey", "title": "Mad Maudlin - Bedlam's Bard, Book 6", "series": "Bedlam's Bard"},
+  {"author": "Mercedes Lackey", "title": "Spirits White as Lightning - Bedlam's Bard, Book 5", "series": "Bedlam's Bard"},
+  {"author": "Mercedes Lackey", "title": "Summoned to the Tourney - Bedlam's Bard, Book 2", "series": "Bedlam's Bard"},
+  {"author": "Mercedes Lackey", "title": "Bastion - Valdemar Collegium Chronicles, Book 5", "series": "Collegium Chronicles"},
+  {"author": "Mercedes Lackey", "title": "Changes", "series": "Collegium Chronicles"},
+  {"author": "Mercedes Lackey", "title": "Foundation", "series": "Collegium Chronicles"},
+  {"author": "Mercedes Lackey", "title": "Intrigues Book 2", "series": "Collegium Chronicles"},
+  {"author": "Mercedes Lackey", "title": "Redoubt - Valdemar Collegium Chronicles, Book 4", "series": "Collegium Chronicles"},
+  {"author": "Mercedes Lackey", "title": "Aerie", "series": "Dragon Jousters"},
+  {"author": "Mercedes Lackey", "title": "Alta", "series": "Dragon Jousters"},
+  {"author": "Mercedes Lackey", "title": "Crown of Vengeance - The Dragon Prophecy, Book 1", "series": "Dragon Prophecy Trilogy"},
+  {"author": "Mercedes Lackey", "title": "Deliverance of Dragons - The Dragon Prophecy Trilogy, Book 3", "series": "Dragon Prophecy Trilogy"},
+  {"author": "Mercedes Lackey", "title": "A Scandal in Battersea - Elemental Masters, Book 12", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "Miss Amelia's List - Elemental Masters, Book 17", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "Phoenix and Ashes - Elemental Masters, Book 3", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "Reserved for the Cat - Elemental Masters", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "Steadfast", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "The Bartered Brides - Elemental Masters, Book 13", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "The Case of the Spellbound Child - Elemental Masters, Book 14", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "The Cyprian - Elemental Masters, Book 18", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "The Fire Rose", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "The Wizard of London - Elemental Masters, Book 4", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "Unnatural Issue - Elemental Masters", "series": "Elemental Masters"},
+  {"author": "Mercedes Lackey", "title": "Beyond", "series": "Founding of Valdemar"},
+  {"author": "Mercedes Lackey", "title": "Into the West Book 2", "series": "Founding of Valdemar"},
+  {"author": "Mercedes Lackey", "title": "Valdemar - Founding of Valdemar, Book 3", "series": "Founding of Valdemar"},
+  {"author": "Mercedes Lackey", "title": "Elvenblood Book 2", "series": "Halfblood Chronicles"},
+  {"author": "Mercedes Lackey", "title": "The Elvenbane Book 1", "series": "Halfblood Chronicles"},
+  {"author": "Mercedes Lackey", "title": "Elite", "series": "Hunter Trilogy"},
+  {"author": "Mercedes Lackey", "title": "Hunter", "series": "Hunter Trilogy"},
+  {"author": "Mercedes Lackey", "title": "Owlflight - Owl Mage Trilogy, Book 1", "series": "Owl Mage Trilogy"},
+  {"author": "Mercedes Lackey", "title": "Owlknight - Owl Mage Trilogy, Book 3", "series": "Owl Mage Trilogy"},
+  {"author": "Mercedes Lackey", "title": "Closer to Home - The Herald Spy, Book 1", "series": "The Herald Spy"},
+  {"author": "Mercedes Lackey", "title": "Closer to the Chest - The Herald Spy, Book 3", "series": "The Herald Spy"},
+  {"author": "Mercedes Lackey", "title": "Closer to the Heart - The Herald Spy, Book 2", "series": "The Herald Spy"},
+  {"author": "Mercedes Lackey", "title": "Magic's Pawn - Valdemar The Last Herald Mage, Book 1", "series": "The Last Herald Mage"},
+  {"author": "Mercedes Lackey", "title": "Magic's Price - Valdemar The Last Herald Mage, Book 3", "series": "The Last Herald Mage"},
+  {"author": "Mercedes Lackey", "title": "Magic's Promise - Valdemar The Last Herald Mage, Book 2", "series": "The Last Herald Mage"},
+  {"author": "Mercedes Lackey", "title": "Storm Breaking - Valdemar The Mage Storms, Book 3", "series": "The Mage Storms"},
+  {"author": "Mercedes Lackey", "title": "Storm Rising - Valdemar The Mage Storms, Book 2", "series": "The Mage Storms"},
+  {"author": "Mercedes Lackey", "title": "Storm Warning - Valdemar The Mage Storms, Book 1", "series": "The Mage Storms"},
+  {"author": "Mercedes Lackey", "title": "Winds of Change - The Mage Winds, Book 2", "series": "The Mage Winds"},
+  {"author": "Mercedes Lackey", "title": "Winds of Fate - Valdemar The Mage Winds, Book 1", "series": "The Mage Winds"},
+  {"author": "Mercedes Lackey", "title": "Winds of Fury - The Mage Winds, Book 3", "series": "The Mage Winds"},
+  {"author": "Mercedes Lackey", "title": "Brightly Burning", "series": "Valdemar"},
+  {"author": "Mercedes Lackey", "title": "By the Sword", "series": "Vows and Honor"},
+  {"author": "Mercedes Lackey", "title": "Oathblood Book 3", "series": "Vows and Honor"},
+  {"author": "Mercedes Lackey", "title": "Oathbound Book 1", "series": "Vows and Honor"},
+  {"author": "Mercedes Lackey", "title": "Oathbreakers Book 2", "series": "Vows and Honor"},
+  {"author": "Michael Bronski", "title": "A Queer History of the United States", "series": ""},
+  {"author": "Molly Black", "title": "Barely Seen", "series": "Tessa Flint FBI Thriller"},
+  {"author": "Morgan Rice", "title": "Oathborne - Year One", "series": ""},
+  {"author": "Morgan Rice", "title": "Nautica Book 1", "series": "Nautica"},
+  {"author": "Nellie H Steele", "title": "Shadow Beasts", "series": ""},
+  {"author": "Nellie H. Steele", "title": "Shelving Magic Complete Series Boxed Set", "series": "Shelving Magic"},
+  {"author": "Olivia Fox", "title": "Captured", "series": ""},
+  {"author": "Oscar Wilde", "title": "The Picture of Dorian Gray", "series": ""},
+  {"author": "Patricia D. Eddy", "title": "A Shift in the Water", "series": "Elemental Shifter"},
+  {"author": "Patrick Abboud & Simon Cunich", "title": "The Greatest Menace - Inside the Gay Prison Experiment", "series": ""},
+  {"author": "Piper Rayne", "title": "My Twist of Fortune", "series": ""},
+  {"author": "Rachel Morgan", "title": "The Memory Thief", "series": "City of Wishes"},
+  {"author": "Rachel Morgan", "title": "Elemental Thief", "series": "Ridley Kayne Chronicles"},
+  {"author": "Rachel Morgan", "title": "The Complete Ridley Kayne Chronicles", "series": "Ridley Kayne Chronicles"},
+  {"author": "Radclyffe Hall", "title": "The Well of Loneliness", "series": ""},
+  {"author": "Rebecca Hefner", "title": "The Darkness Within", "series": ""},
+  {"author": "Rebecca Hefner", "title": "The Dawn of Peace", "series": ""},
+  {"author": "Rebecca Hefner", "title": "The Solitary Protector", "series": ""},
+  {"author": "Rebecca Yarros", "title": "Fourth Wing - Empyrean, Book 1", "series": "Empyrean"},
+  {"author": "Rebecca Yarros", "title": "Iron Flame - Empyrean, Book 2", "series": "Empyrean"},
+  {"author": "Rebecca Yarros", "title": "Onyx Storm - Empyrean, Book 3", "series": "Empyrean"},
+  {"author": "Remington Kane", "title": "The TANNER Series - Books 1-3", "series": "TANNER"},
+  {"author": "Sam Feuerbach", "title": "The Thief and the Mercenary", "series": "The Jester-Chronicles"},
+  {"author": "Sarah K. L. Wilson", "title": "Fly with the Arrow", "series": ""},
+  {"author": "Sarah Piper", "title": "Blood and Midnight", "series": ""},
+  {"author": "Sarah Piper", "title": "Dark Deception", "series": ""},
+  {"author": "Sol Smith", "title": "The Autistic's Guide to Self-Discovery", "series": ""},
+  {"author": "Sophie Keetch", "title": "Le Fay", "series": "Morgan le Fay"},
+  {"author": "Sophie Keetch", "title": "Morgan Is My Name", "series": "Morgan le Fay"},
+  {"author": "Sophie Keetch", "title": "Storm Over Camelot", "series": "Morgan le Fay"},
+  {"author": "T.C. Edge", "title": "The Song of the First Blade", "series": "The Bladeborn Saga"},
+  {"author": "The Audible Editors", "title": "Why We March - Celebrating 50 Years of Pride", "series": ""},
+  {"author": "Tilly Wallace", "title": "Opening Gambit", "series": ""},
+  {"author": "TJ Nichols", "title": "The Fire Dancer's Familiar", "series": ""},
+  {"author": "Travis Beacham", "title": "Impact Winter", "series": "Impact Winter"},
+  {"author": "Tricia O'Malley", "title": "Wild Irish Heart", "series": ""},
+  {"author": "Una McCormack", "title": "The Autobiography of Kathryn Janeway", "series": ""},
+  {"author": "Vera Raye", "title": "A Crown of Tears and Treason", "series": "The Curse of Silver Secrets"},
+  {"author": "Veronica Roth", "title": "Divergent", "series": "Divergent"},
+  {"author": "Wilkie Collins", "title": "The Moonstone", "series": ""}
+];
+
+const SYNOPSIS_KEY = 'audiobook_synopses_v1';
+
+// Load from localStorage or use defaults
+let books = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || DEFAULT_BOOKS;
+let synopses = JSON.parse(localStorage.getItem(SYNOPSIS_KEY) || '{}');
+
+let currentView = 'grid';
+let filteredBooks = [];
+let fetchAllRunning = false;
+let fetchAllStop = false;
+
+function saveBooks() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+}
+
+function saveSynopses() {
+  localStorage.setItem(SYNOPSIS_KEY, JSON.stringify(synopses));
+}
+
+function getStats() {
+  const authors = new Set(books.map(b => b.author));
+  const series = new Set(books.filter(b => b.series).map(b => b.series));
+  return { books: books.length, authors: authors.size, series: series.size };
+}
+
+function updateStats() {
+  const s = getStats();
+  document.getElementById('stat-books').textContent = s.books;
+  document.getElementById('stat-authors').textContent = s.authors;
+  document.getElementById('stat-series').textContent = s.series;
+}
+
+function populateFilters() {
+  const authorSel = document.getElementById('filter-author');
+  const seriesSel = document.getElementById('filter-series');
+  const authors = [...new Set(books.map(b => b.author))].sort();
+  const series = [...new Set(books.filter(b => b.series).map(b => b.series))].sort();
+
+  authorSel.innerHTML = '<option value="">All Authors</option>' +
+    authors.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+  seriesSel.innerHTML = '<option value="">All Series</option>' +
+    series.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+function esc(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function highlight(text, query) {
+  if (!query) return esc(text);
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return esc(text).replace(re, '<mark class="highlight">$1</mark>');
+}
+
+function render() {
+  const query = document.getElementById('search').value.trim().toLowerCase();
+  const authorFilter = document.getElementById('filter-author').value;
+  const seriesFilter = document.getElementById('filter-series').value;
+  const sortBy = document.getElementById('sort-by').value;
+
+  filteredBooks = books.filter(b => {
+    const matchQuery = !query ||
+      b.title.toLowerCase().includes(query) ||
+      b.author.toLowerCase().includes(query) ||
+      b.series.toLowerCase().includes(query);
+    const matchAuthor = !authorFilter || b.author === authorFilter;
+    const matchSeries = !seriesFilter || b.series === seriesFilter;
+    return matchQuery && matchAuthor && matchSeries;
+  });
+
+  // Sort
+  filteredBooks.sort((a, b) => {
+    if (sortBy === 'title') return a.title.localeCompare(b.title);
+    if (sortBy === 'series') {
+      const sc = (a.series || 'zzz').localeCompare(b.series || 'zzz');
+      return sc !== 0 ? sc : a.title.localeCompare(b.title);
+    }
+    const ac = a.author.localeCompare(b.author);
+    return ac !== 0 ? ac : a.title.localeCompare(b.title);
+  });
+
+  document.getElementById('result-count').textContent =
+    filteredBooks.length === books.length
+      ? `${books.length} books`
+      : `${filteredBooks.length} of ${books.length}`;
+
+  const main = document.getElementById('book-content');
+
+  if (filteredBooks.length === 0) {
+    main.innerHTML = `<div class="no-results"><p>Nothing found</p><p>Try a different search or filter</p></div>`;
+    return;
+  }
+
+  if (sortBy === 'author') {
+    // Group by author
+    const groups = {};
+    filteredBooks.forEach(b => {
+      if (!groups[b.author]) groups[b.author] = [];
+      groups[b.author].push(b);
+    });
+
+    main.innerHTML = Object.entries(groups).map(([author, bks]) => `
+      <div class="author-group">
+        <div class="author-header">
+          <span class="author-name">${highlight(author, query)}</span>
+          <span class="author-count">${bks.length} book${bks.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="${currentView === 'grid' ? 'books-grid' : 'books-list'}">
+          ${bks.map(b => renderBook(b, query)).join('')}
+        </div>
+      </div>
+    `).join('');
+  } else {
+    main.innerHTML = `<div class="${currentView === 'grid' ? 'books-grid' : 'books-list'}">
+      ${filteredBooks.map(b => renderBook(b, query, true)).join('')}
+    </div>`;
+  }
+}
+
+function bookKey(b) {
+  return (b.author + '|' + b.title).toLowerCase().replace(/[^a-z0-9|]/g, '');
+}
+
+function renderBook(b, query, showAuthor = false) {
+  const key = bookKey(b);
+  const synopsis = synopses[key];
+  const synopsisHtml = synopsis
+    ? `<div class="synopsis">${esc(synopsis)}</div>`
+    : `<button class="synopsis-btn" onclick="fetchSynopsis(this, '${key.replace(/'/g,"\\'")}', '${esc(b.title).replace(/'/g,"\\'")}', '${esc(b.author).replace(/'/g,"\\'")}')">Get synopsis</button>`;
+
+  if (currentView === 'grid') {
+    return `<div class="book-card" id="card-${key}">
+      <div class="book-title">${highlight(b.title, query)}</div>
+      ${showAuthor ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px">${highlight(b.author, query)}</div>` : ''}
+      ${b.series ? `<span class="book-series-tag">${highlight(b.series, query)}</span>` : ''}
+      ${synopsisHtml}
+    </div>`;
+  } else {
+    return `<div class="book-row" id="card-${key}">
+      <div class="book-title">${highlight(b.title, query)}${showAuthor ? ` <span style="color:var(--text-muted);font-size:0.82em">— ${highlight(b.author, query)}</span>` : ''}</div>
+      ${b.series ? `<span class="book-series-tag">${highlight(b.series, query)}</span>` : ''}
+      ${synopsisHtml}
+    </div>`;
+  }
+}
+
+async function fetchSynopsis(btn, key, title, author) {
+  if (btn) {
+    btn.textContent = 'Fetching…';
+    btn.classList.add('loading');
+    btn.disabled = true;
+  }
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 120,
+        messages: [{
+          role: 'user',
+          content: `Write a single 2-sentence synopsis for the audiobook "${title}" by ${author}. Be specific to this book. Return only the synopsis, no preamble.`
+        }]
+      })
+    });
+    const data = await response.json();
+    const text = data?.content?.[0]?.text?.trim();
+    if (text) {
+      synopses[key] = text;
+      saveSynopses();
+      updateBannerCount();
+      // Update the card in place
+      const card = document.getElementById('card-' + key);
+      if (card) {
+        const btnEl = card.querySelector('.synopsis-btn');
+        if (btnEl) {
+          const div = document.createElement('div');
+          div.className = 'synopsis';
+          div.textContent = text;
+          btnEl.replaceWith(div);
+        }
+      }
+    } else {
+      if (btn) { btn.textContent = 'Retry'; btn.classList.remove('loading'); btn.disabled = false; }
+    }
+  } catch(e) {
+    if (btn) { btn.textContent = 'Retry'; btn.classList.remove('loading'); btn.disabled = false; }
+  }
+}
+
+async function fetchAllSynopses() {
+  if (fetchAllRunning) return;
+  fetchAllRunning = true;
+  fetchAllStop = false;
+
+  const missing = books.filter(b => !synopses[bookKey(b)]);
+  let done = 0;
+
+  document.getElementById('fetch-all-btn').disabled = true;
+  document.getElementById('stop-btn').style.display = 'inline-block';
+
+  for (const b of missing) {
+    if (fetchAllStop) break;
+    const key = bookKey(b);
+    updateBannerStatus(`Fetching ${done + 1} of ${missing.length}: ${b.title}…`);
+    // Find the button in DOM if visible
+    const card = document.getElementById('card-' + key);
+    const btn = card ? card.querySelector('.synopsis-btn') : null;
+    await fetchSynopsis(btn, key, b.title, b.author);
+    done++;
+    // Small delay to be polite to the API
+    await new Promise(r => setTimeout(r, 600));
+  }
+
+  fetchAllRunning = false;
+  document.getElementById('fetch-all-btn').disabled = false;
+  document.getElementById('stop-btn').style.display = 'none';
+  updateBannerCount();
+  if (!fetchAllStop) updateBannerStatus('All synopses fetched!');
+}
+
+function stopFetchAll() {
+  fetchAllStop = true;
+  fetchAllRunning = false;
+  document.getElementById('fetch-all-btn').disabled = false;
+  document.getElementById('stop-btn').style.display = 'none';
+  updateBannerStatus('Stopped.');
+}
+
+function updateBannerCount() {
+  const total = books.length;
+  const have = books.filter(b => synopses[bookKey(b)]).length;
+  const pct = Math.round((have / total) * 100);
+  const el = document.getElementById('banner-count');
+  if (el) el.innerHTML = `<span>${have} of ${total}</span> books have synopses (${pct}%)`;
+}
+
+function updateBannerStatus(msg) {
+  const el = document.getElementById('banner-status');
+  if (el) el.textContent = msg;
+}
+
+function renderBanner() {
+  const wrap = document.getElementById('fetch-banner-wrap');
+  if (!wrap) return;
+  const total = books.length;
+  const have = books.filter(b => synopses[bookKey(b)]).length;
+  const pct = Math.round((have / total) * 100);
+  if (have === total) {
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="fetch-banner" style="margin-bottom: 28px; position:relative; z-index:1;">
+      <div>
+        <p id="banner-count"><span>${have} of ${total}</span> books have synopses (${pct}%)</p>
+        <p id="banner-status" style="font-size:0.75rem;color:var(--text-dim);margin-top:2px;"></p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="stop-btn" class="stop-btn" onclick="stopFetchAll()" style="display:none;">Stop</button>
+        <button id="fetch-all-btn" class="fetch-all-btn" onclick="fetchAllSynopses()">Fetch All Synopses</button>
+      </div>
+    </div>`;
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('btn-grid').classList.toggle('active', v === 'grid');
+  document.getElementById('btn-list').classList.toggle('active', v === 'list');
+  render();
+}
+
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('new-title').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('new-title').value = '';
+  document.getElementById('new-author').value = '';
+  document.getElementById('new-series').value = '';
+}
+
+function addBook() {
+  const title = document.getElementById('new-title').value.trim();
+  const author = document.getElementById('new-author').value.trim();
+  const series = document.getElementById('new-series').value.trim();
+  if (!title || !author) return alert('Title and Author are required.');
+  books.push({ title, author, series });
+  saveBooks();
+  updateStats();
+  populateFilters();
+  closeModal();
+  render();
+}
+
+// Close modal on overlay click
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+// Event listeners
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('filter-author').addEventListener('change', render);
+document.getElementById('filter-series').addEventListener('change', render);
+document.getElementById('sort-by').addEventListener('change', render);
+
+// Init
+updateStats();
+populateFilters();
+renderBanner();
+render();
+</script>
+</body>
+</html>
